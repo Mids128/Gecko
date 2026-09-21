@@ -1,5 +1,5 @@
 {
-  "$id": "mids128/gecko-token-schema-v1.json",
+  "$id": "gecko-token-schema-v1.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Gecko Binary Parser Token Schema",
   "x-version": "1.0.0",
