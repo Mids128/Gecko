@@ -1,0 +1,198 @@
+{
+  "$id": "mids128/gecko-token-schema-v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Gecko Binary Parser Token Schema",
+  "x-version": "1.0.0",
+  "$metadata": {
+  "schemaVersion": "1.0.0"
+  },
+  
+  "type": "object",
+
+  "properties": {
+    "Name": {
+      "type": "string",
+      "description": "Name of the token store (should match filename of the binary)"
+    },
+    "SchemaVersion": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "The version of the schema this token store follows."
+    },
+    "Generator": {
+      "type": "string",
+      "description": "The tool or script that generated this token store."
+    },
+    "FormatOwner": {
+      "type": "string",
+      "description": "The application that owns the binary format this tokenstore describes. (Example: 'GameName:Variant')"
+    },
+    "FormatOwnerVersion": {
+      "type": "string",
+      "description": "The build version of the format owner software."
+    },
+    "Frozen": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "description": "Date the token table was validated (YYYY-MM-DD)"
+    },
+    "FirstTable": {
+      "type": "string",
+      "description": "The ID of the first token table, from which all others will be called."
+    },
+    "Include": {
+    "type": "string",
+    "description": "Path to another token store to include.\nThis is intended for handling file headers which have a common structure across many files.",
+    "items": { "type": "string" }
+    },
+    "Requires": {
+    "type": "array",
+    "description": "Files which must be read first because this one references them. (Not currently used)",
+    "items": { "type": "string" }
+    },
+    "ByteAlign": {
+    "type": "integer",
+    "description": "Byte alignment for the file.",
+    "pattern": "^[0,2,4,8]+$"
+    },
+    "DataEncoding": {
+    "type": "string",
+    "description": "Endianness for the file. Defaults to little-endian if not specified.",
+    "pattern": "^(little|big)$"
+    },
+    "StringEncoding": {
+    "type": "string",
+    "description": "String encoding for the file. Defaults to UTF-8 if not specified.",
+    "pattern": "^(UTF32LE|UTF32BE|UTF16LE|UTF16BE|UTF8|UTF16|UTF32|ASCII)$"
+    },
+    "TokenTables": {
+      "type": "array",
+      "description": "Array of Token Tables.",
+      "items": { "$ref": "#/$defs/TokenTable" }
+    }
+  },
+    "required": [
+      "TokenTables", "Name", "SchemaVersion", "FormatOwner", "FormatOwnerVersion", "FirstTable"
+    ],
+
+  
+  "$defs": {
+    "TokenTable": {
+      "type": "object",
+       "description": "Array of Token Tables describing a single table's struct layout. Must be unique.",
+        "properties": {
+          "Name": {"type": "string"},
+          "ID": {"type": "string"},
+          "SizePrefix": {
+            "type": "string",
+            "enum": ["UnsignedByte", "SignedByte",
+                     "Int16", "Int32", "Int64", "UInt16", "UInt32", "UInt64", "Ignored", "None"],
+            "description": "Specifies the size prefix for the table. 'Ignored', 'None', or not specifying this field means no size prefix."
+          },
+          "NoAlign": {
+            "type": "boolean",
+            "description": "If true, the table will be processed without byte-alignment."
+          },
+          "Tokens": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/Token" }
+          }
+        },
+        "required": ["ID", "Tokens"]
+      },
+
+    
+    "Token": {
+      "type": "object",
+      "description": "A single token describing how to parse a field.",
+      "properties": {
+        "Name": { "type": ["string", "null"] },
+        "DataType": {
+          "type": "string",
+          "description": "The type of token to process.",
+          "enum": [
+            "Ignored", "SequenceStart", "SequenceEnd", "Boolean", "UnsignedByte", "SignedByte",
+            "Int16", "Int32", "Int64", "UInt16", "UInt32", "UInt64", "Float32", "Float64", "Chars",
+            "Bytes", "Flags32", "Struct", "DynamicStruct", "StringTable", "String16", "String32",
+            "FixedString", "StringNT", "Time32", "Time64", "Blob", "Blob16", "Blob32", "Blob64",
+            "Seek", "Virtual", "Emit32", "Emit64", "EmitString", "Payload", "Directory",
+            "DirectoryEntry", "None"
+          ]
+        },
+        "OptionFlags": { 
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "Normal", "Comment", "SkipByteAlign", "Virtual", "Reverse", "DisregardBOM", 
+              "ByOffset", "ByIndex", "Resource", "Absolute", "Relative"
+            ]
+          }
+        },
+        "StorageFlags": { 
+          "type": "array",
+          "description": "Flag options: Normal, Optional, CountArray, FixedArray, SizeArray, SentinelArray, ByOffset, ByIndex, Resource, Payload, Comment, Absolute, Relative",
+          "items": {
+            "type": "string",
+            "enum": [
+             "Normal", "Optional", "CountArray", "FixedArray", "SizeArray", "SentinelArray", 
+             "Payload", "String16", "String32", "SizePrefixed", "CountPrefixed", "Prefix8",
+             "Prefix16", "Prefix64", "LengthIsCodeUnits"
+            ]
+          }
+        },
+        "Precision": { "type": "integer" },
+        "StaticDefine": { 
+          "type": "integer",
+          "description": "Pointer to a StaticDefine list for string substitution."
+         },
+        "Param": { 
+          "type": ["integer", "string"],
+          "description": "Can either be a parameter such as fixed array/string size. Also serves as a default value for integers."
+         },
+        "Subtable": { "type": ["string", "null"] },
+        "Format": {
+           "type": "string",
+           "enum":[
+              "Normal", "Epoch2K", "Texture", "ASCII",
+              "UTF8", "UTF16BE", "UTF16LE", "UTF32BE", "UTF32LE"
+            ]
+        },
+        "NoAlign": {
+          "type": "boolean",
+          "description": "If true, the value will be processed without byte-alignment."
+        },
+        "OpCode": {
+          "type": "string",
+          "description": "If set, the parser will execute this instruction, as well as process the tokenised data.",
+          "enum": [
+            "Nop", "SetMemory", "GetMemory", "Add", "Subtract", "Multiply", "Divide", "Increment", 
+            "Decrement", "SetZero", "LoadLiteral", "LoadRegister", "StoreRegister", "LoadFlag", 
+            "StoreFlag", "EqualMemory", "EqualRegister", "EqualLiteral", "FlagIf", "StorePosition", 
+            "PadToSize", "If", "IfNot", "Loop", "Lookup", "Compare", "GreaterThan", "LessThan", "Break"
+          ]
+        },
+        "Operand": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "enum": ["COUNTER", "VERSION", "STRINGS", "LOOP", "OPERAND", "FLAG", "ALU"]
+            }
+            
+          ],
+          "description": "Specifies a memory slot or other data for the OpCode."
+        }
+      },
+      "required": [
+        "Name",
+        "DataType"
+      ]
+    }
+  }
+}
