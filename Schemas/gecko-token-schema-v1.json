@@ -89,7 +89,7 @@
     }
   },
     "required": [
-      "TokenTables", "$Schema", "TargetExtension", "TargetFormat",  "FormatOwner", "FormatOwnerVersion", "Namespace", "ByteAlign", "FirstTable"
+      "TokenTables", "$schema", "TargetExtension", "TargetFormat",  "FormatOwner", "FormatOwnerVersion", "Namespace", "ByteAlign", "FirstTable"
     ],
 
   
