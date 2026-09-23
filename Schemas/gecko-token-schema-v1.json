@@ -154,7 +154,7 @@
             "enum": [
              "Normal", "Optional", "CountArray", "FixedArray", "SizeArray", "SentinelArray", 
              "Payload", "String16", "String32", "SizePrefixed", "CountPrefixed", "Prefix8",
-             "Prefix16", "Prefix64", "LengthIsCodeUnits"
+             "Prefix16", "Prefix64", "LengthIsCodeUnits", "LittleEndian", "BigEndian"
             ]
           }
         },
@@ -186,7 +186,8 @@
             "Nop", "SetMemory", "GetMemory", "Add", "Subtract", "Multiply", "Divide", "Increment", 
             "Decrement", "SetZero", "LoadLiteral", "LoadRegister", "StoreRegister", "LoadFlag", 
             "StoreFlag", "EqualMemory", "EqualRegister", "EqualLiteral", "FlagIf", "StorePosition", 
-            "PadToSize", "If", "IfNot", "Loop", "Lookup", "Compare", "GreaterThan", "LessThan", "Break"
+            "PadToSize", "If", "IfNot", "Loop", "Lookup", "Compare", "GreaterThan", "LessThan", 
+            "SetControlValues", "Break"
           ]
         },
         "Operand": {
