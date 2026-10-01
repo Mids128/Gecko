@@ -1,0 +1,190 @@
+{
+  "$id": "gecko-token-schema-v2.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Gecko Binary Parser Token Schema",
+  "x-version": "2.0.0",
+  "$metadata": {
+  "schemaVersion": "2.0.0"
+  },
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "The schema to which this token store conforms."
+    },
+    "Header": {
+      "type": "object",
+      "properties": { 
+        "SchemaVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+          "description": "The version of the schema."
+        },
+          "TargetName": {
+          "type": "string",
+          "description": "The name, without extension, of the file this Token Store describes. Or empty if the name is not a single file."
+        },
+          "TargetExtension": {
+          "type": "string",
+          "description": "The extension of the file this token store describes. Or empty if the name is not a single file. Do not prefix with a '.'"
+        },
+          "TargetFormat": {
+          "type": "string",
+          "description": "The human readable name of this file format, ex: 'GZip Archive'. This should be kept short ideally."
+        },
+          "Description": {
+          "type": "string",
+          "description": "A longer description of the target format to avoid TargetFormat getting too long."
+        },
+        "FormatOwner": {
+          "type": "string",
+          "description": "The application that owns the binary format this tokenstore describes. (Example: 'GameName:Variant')"
+        },
+        "FormatOwnerVersion": {
+          "type": "string",
+          "description": "The build version of the format owner software."
+        },
+          "Namespace": {
+          "type": "string",
+          "description": "The namespace that the compiled C# assembly for this Token Store will be placed in. (It will be prefixed by a Gecko specific root namespace)"
+        },
+          "Generator": {
+          "type": "string",
+          "description": "The tool or script that generated this token store."
+        },
+        "Frozen": {
+          "type": "string",
+          "format": "date",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "description": "Date the token table was validated (YYYY-MM-DD)"
+        },
+        "MagicNumber": {
+        "type": "string",
+        "description": "A magic number in the file header that identifies the format. Can be supplied as an integer in decimal or hexadecimal notation (0x12345678) up to 64 bits/8 bytes."
+        },
+        "MagicOffset": {
+        "type": "string",
+        "description": "The offset in the file where the Magic Number is to be found. Can be supplied as an integer in decimal or hexadecimal notation (0x12345678)."
+        },
+        "ByteAlign": {
+        "type": "integer",
+        "description": "Byte alignment for the file.",
+        "pattern": "^[0,2,4,8]+$"
+        },
+        "DataEncoding": {
+        "type": "string",
+        "description": "Endianness for the file. Defaults to little-endian if not specified.",
+        "pattern": "^(little|big)$"
+        },
+        "StringEncoding": {
+        "type": "string",
+        "description": "String encoding for the file. Defaults to UTF-8 if not specified.",
+        "pattern": "^(UTF32LE|UTF32BE|UTF16LE|UTF16BE|UTF8|UTF16|UTF32|ASCII)$"
+        },
+        "Include": {
+        "type": "string",
+        "description": "Path to another token store to include.\nThis is intended for handling file headers which have a common structure across many files.",
+        "items": { "type": "string" }
+        },
+        "FirstTable": {
+          "type": "string",
+          "description": "The ID of the first token table, from which all others will be called."
+        }
+      }, "required": ["FirstTable", "Namespace", "TargetFormat"]
+    },
+    "TokenTables": {
+      "type": "array",
+      "description": "Array of Token Tables.",
+      "items": { "$ref": "#/$defs/TokenTable" }
+    }
+  },
+    "required": [
+      "TokenTables", "$schema", "Header"
+    ],
+
+  
+  "$defs": {
+    "TokenTable": {
+      "type": "object",
+       "description": "Array of Token Tables describing a single table's struct layout. Must be unique.",
+        "properties": {
+          "Name": {"type": "string"},
+          "ID": {"type": "string"},
+          "SizePrefix": {
+            "type": "string",
+            "enum": ["UInt8", "Int8",
+                     "Int16", "Int32", "Int64", "UInt16", "UInt32", "UInt64", "VarInt", "Ignored", "None"],
+            "description": "Specifies the size prefix for the table. 'Ignored', 'None', or not specifying this field means no size prefix."
+          },
+          "NoAlign": {
+            "type": "boolean",
+            "description": "If true, the table will be processed without byte-alignment."
+          },
+          "Tokens": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/Token" }
+          }
+        },
+        "required": ["ID", "Tokens"]
+      },
+
+    
+    "Token": {
+      "type": "object",
+      "description": "A single token describing how to parse a field.",
+      "properties": {
+        "Name": { "type": ["string", "null"] },
+        "Class": {
+          "type": "string",
+          "description": "The type of token to process.",
+          "enum": [
+            "Ignored", "Boolean", "Numeric", "VariableNumeric", "String", "StringTable", "Span",
+            "Structure", "Time", "Blob", "Virtual"
+          ]
+        },
+        "OptionFlags": { 
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "Normal", "Comment", "SkipByteAlign", "DisregardBOM", 
+              "ByOffset", "ByIndex", "Resource", "Absolute", "Relative"
+            ]
+          }
+        },
+        "StorageFlags": { 
+          "type": "array",
+          "description": "Flag options: Normal, Optional, CountArray, FixedArray, SizeArray, SentinelArray, ByOffset, ByIndex, Resource, Payload, Comment, Absolute, Relative",
+          "items": {
+            "type": "string",
+            "enum": [
+             "Normal", "Optional", "CountArray", "FixedArray", "SizeArray", "SentinelArray", 
+             "SizePrefixed", "CountPrefixed", "Prefix7", "Prefix8","Prefix16", "Prefix32",
+              "Prefix64", "LengthIsCodeUnits", "LittleEndian", "BigEndian"
+            ]
+          }
+        },
+        "MappingValue": { 
+          "type": "integer",
+          "description": "Value that can be used to identify an enum to map to. Or whatever."
+         },
+        "Parameter": { 
+          "type": ["integer", "string"],
+          "description": "Sets fixed array/string size. Also serves as a default value for integers if non-zero."
+         },
+        "Subtable": { "type": ["string", "null"] },
+        "Format": {
+           "type": "string",
+           "enum":[
+              "Normal", "Epoch2K", "Texture", "ASCII",
+              "UTF8", "UTF16BE", "UTF16LE", "UTF32BE", "UTF32LE", "HEX"
+            ]
+        }
+      },
+      "required": [
+        "Name",
+        "DataType"
+      ]
+    }
+  }
+}
